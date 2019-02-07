@@ -137,7 +137,9 @@ func (l *local) Update(ctx context.Context, req *imagesapi.UpdateImageRequest, _
 	)
 
 	if req.UpdateMask != nil && len(req.UpdateMask.Paths) > 0 {
-		fieldpaths = append(fieldpaths, req.UpdateMask.Paths...)
+		for _, path := range req.UpdateMask.Paths {
+			fieldpaths = append(fieldpaths, path)
+		}
 	}
 
 	updated, err := l.store.Update(ctx, image, fieldpaths...)

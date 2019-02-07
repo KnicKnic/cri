@@ -76,9 +76,9 @@ func serveListener(path string) (net.Listener, error) {
 
 func handleSignals(logger *logrus.Entry, signals chan os.Signal) error {
 	logger.Info("starting signal loop")
-
 	for {
-		for s := range signals {
+		select {
+		case s := <-signals:
 			switch s {
 			case unix.SIGCHLD:
 				if err := Reap(); err != nil {

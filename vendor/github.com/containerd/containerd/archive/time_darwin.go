@@ -1,5 +1,3 @@
-// +build !windows
-
 /*
    Copyright The containerd Authors.
 
@@ -16,17 +14,17 @@
    limitations under the License.
 */
 
-package v2
+package archive
 
 import (
-	"context"
-	"io"
-	"path/filepath"
+	"time"
 
-	"github.com/containerd/fifo"
-	"golang.org/x/sys/unix"
+	"github.com/pkg/errors"
 )
 
-func openShimLog(ctx context.Context, bundle *Bundle) (io.ReadCloser, error) {
-	return fifo.OpenFifo(ctx, filepath.Join(bundle.Path, "log"), unix.O_RDONLY|unix.O_CREAT|unix.O_NONBLOCK, 0700)
+// as at MacOS 10.12 there is apparently no way to set timestamps
+// with nanosecond precision. We could fall back to utimes/lutimes
+// and lose the precision as a temporary workaround.
+func chtimes(path string, atime, mtime time.Time) error {
+	return errors.New("OSX missing UtimesNanoAt")
 }
