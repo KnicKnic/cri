@@ -44,6 +44,8 @@ import (
 	cio "github.com/containerd/cri/pkg/server/io"
 	containerstore "github.com/containerd/cri/pkg/store/container"
 	"github.com/containerd/cri/pkg/util"
+
+	"github.com/golang/protobuf/jsonpb"
 )
 
 func init() {
@@ -138,16 +140,18 @@ func (c *criService) CreateContainer(ctx context.Context, r *runtime.CreateConta
 	}()
 
 	var sandboxPlatform string
+	
+	// Get the RuntimeHandler config overrides
+	ociRuntime := c.config.DefaultRuntime
 	if sandbox.RuntimeHandler != "" {
-		// Get the RuntimeHandler config overrides
-		ociRuntime := c.config.Runtimes[sandbox.RuntimeHandler]
-		runtimeOpts, err := generateRuntimeOptions(ociRuntime, c.config)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to generate runtime options")
-		}
-		rhcso := runtimeOpts.(*runhcsoptions.Options)
-		sandboxPlatform = rhcso.SandboxPlatform
+		ociRuntime = c.config.Runtimes[sandbox.RuntimeHandler]
 	}
+	runtimeOpts, err := generateRuntimeOptions(ociRuntime, c.config)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to generate runtime options")
+	}
+	rhcso := runtimeOpts.(*runhcsoptions.Options)
+	sandboxPlatform = rhcso.SandboxPlatform
 	if sandboxPlatform == "" {
 		sandboxPlatform = "windows/amd64"
 	}
@@ -277,6 +281,11 @@ func (c *criService) generateContainerSpec(id string, sandboxID string, sandboxP
 
 	g.AddAnnotation(annotations.ContainerType, annotations.ContainerTypeContainer)
 	g.AddAnnotation(annotations.SandboxID, sandboxID)
+
+	m := jsonpb.Marshaler{}
+	configJson, _ := m.MarshalToString(config)
+	sconfigJson, _ := m.MarshalToString(sandboxConfig)
+	logrus.Debugf("configs eoa;fdno;s container: %s, pod: %s", configJson, sconfigJson)
 
 	// Add OCI Mounts
 	for _, m := range config.GetMounts() {

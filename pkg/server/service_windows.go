@@ -21,6 +21,7 @@ package server
 import (
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	runtime "k8s.io/kubernetes/pkg/kubelet/apis/cri/runtime/v1alpha2"
 )
 
@@ -57,14 +58,18 @@ func (c *criService) getDefaultSnapshotterForSandbox(cfg *runtime.PodSandboxConf
 	if cfg != nil {
 		platform = strings.Replace(cfg.Labels["sandbox-platform"], "-", "/", -1)
 	}
+	logrus.Debugf("pull gou;fsdjocklm %s", cfg)
 	return c.getDefaultSnapshotterForPlatform(platform)
 }
 
 func (c *criService) getDefaultSnapshotterForPlatform(platform string) string {
 	if platform == "linux/amd64" {
+		logrus.Debugf("getDefaultSnapshotterForPlatform windows-lcow due to platform label %s", platform)
 		return "windows-lcow"
 	} else if platform == "windows/amd64" {
+		logrus.Debugf("getDefaultSnapshotterForPlatform windows due to platform label %s", platform)
 		return "windows"
 	}
+	logrus.Debugf("getDefaultSnapshotterForPlatform %s", c.config.ContainerdConfig.Snapshotter)
 	return c.config.ContainerdConfig.Snapshotter
 }
