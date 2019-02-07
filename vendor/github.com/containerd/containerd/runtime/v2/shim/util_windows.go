@@ -29,8 +29,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-const shimBinaryFormat = "containerd-shim-%s-%s.exe"
-
 func getSysProcAttr() *syscall.SysProcAttr {
 	return nil
 }

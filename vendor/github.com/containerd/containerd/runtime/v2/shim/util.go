@@ -31,6 +31,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+const shimBinaryFormat = "containerd-shim-%s-%s"
+
 var runtimePaths sync.Map
 
 // Command returns the shim command with the provided args and configuration
@@ -63,19 +65,7 @@ func Command(ctx context.Context, runtime, containerdAddress, path string, cmdAr
 		if cmdPath, lerr = exec.LookPath(name); lerr != nil {
 			if eerr, ok := lerr.(*exec.Error); ok {
 				if eerr.Err == exec.ErrNotFound {
-					// LookPath only finds current directory matches based on
-					// the callers current directory but the caller is not
-					// likely in the same directory as the containerd
-					// executables. Instead match the calling binaries path
-					// (containerd) and see if they are side by side. If so
-					// execute the shim found there.
-					testPath := filepath.Join(filepath.Dir(self), name)
-					if _, serr := os.Stat(testPath); serr == nil {
-						cmdPath = testPath
-					}
-					if cmdPath == "" {
-						return nil, errors.Wrapf(os.ErrNotExist, "runtime %q binary not installed %q", runtime, name)
-					}
+					return nil, errors.Wrapf(os.ErrNotExist, "runtime %q binary not installed %q", runtime, name)
 				}
 			}
 		}
